@@ -4,26 +4,78 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Rush Hour Puzzle</title>
-  <style>
-    body{font-family:Arial, sans-serif;display:flex;flex-direction:column;align-items:center;margin-top:60px}
-    .wrapper{position:relative}
-    .exit{position:absolute;top:-20px;left:150px;font-weight:bold}
+<style>
+  body{
+    font-family:Arial, sans-serif;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    margin-top:40px;
+  }
+
+  .wrapper{
+    position:relative;
+    display:flex;
+    gap:24px;
+    max-width:100%;
+  }
+
+  .exit{
+    position:absolute;
+    top:-20px;
+    left:150px;
+    font-weight:bold;
+  }
+
+  .board{
+    position:relative;
+    width:360px;
+    height:360px;
+    border:3px solid #333;
+    background-size:60px 60px;
+    background-image:
+      linear-gradient(to right,#999 1px,transparent 1px),
+      linear-gradient(to bottom,#999 1px,transparent 1px);
+  }
+
+  .block{
+    position:absolute;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-weight:bold;
+    color:#000;
+    border-radius:6px;
+    cursor:pointer;
+    user-select:none;
+  }
+
+  /* ✅ 모바일 대응 */
+  @media (max-width: 768px){
+    .wrapper{
+      flex-direction:column;
+      align-items:center;
+    }
+
     .board{
-      position:relative;
-      width:360px;height:360px;
-      border:3px solid #333;
-      background-size:60px 60px;
-      background-image:
-        linear-gradient(to right,#999 1px,transparent 1px),
-        linear-gradient(to bottom,#999 1px,transparent 1px);
+      width:90vw;
+      height:90vw;
+      max-width:360px;
+      max-height:360px;
+      background-size: calc(90vw / 6) calc(90vw / 6);
     }
-    .block{
-      position:absolute;
-      display:flex;align-items:center;justify-content:center;
-      font-weight:bold;color:#000;
-      border-radius:6px;cursor:pointer;user-select:none
+
+    .exit{
+      left:50%;
+      transform:translateX(-50%);
     }
-  </style>
+
+    #logPanel{
+      width:90vw !important;
+      max-width:360px;
+    }
+  }
+</style>
 </head>
 <body>
   <div style="width:100%;text-align:center;margin-bottom:24px;">
