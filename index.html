@@ -1,11 +1,146 @@
 <!DOCTYPE html>
-<html>
+<html lang="ko">
 <head>
-  <meta charset="utf-8">
-  <title>내 첫 사이트</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rush Hour Puzzle</title>
+  <style>
+    body{font-family:Arial, sans-serif;display:flex;flex-direction:column;align-items:center;margin-top:60px}
+    .wrapper{position:relative}
+    .exit{position:absolute;top:-20px;left:150px;font-weight:bold}
+    .board{
+      position:relative;
+      width:360px;height:360px;
+      border:3px solid #333;
+      background-size:60px 60px;
+      background-image:
+        linear-gradient(to right,#999 1px,transparent 1px),
+        linear-gradient(to bottom,#999 1px,transparent 1px);
+    }
+    .block{
+      position:absolute;
+      display:flex;align-items:center;justify-content:center;
+      font-weight:bold;color:#000;
+      border-radius:6px;cursor:pointer;user-select:none
+    }
+  </style>
 </head>
 <body>
-  <h1>안녕! 👋</h1>
-  <p>이건 GitHub Pages로 만든 사이트야</p>
+  <div style="width:100%;text-align:center;margin-bottom:24px;">
+    <h2 style="margin:0;">조광일의 러시아워 퍼즐</h2>
+  </div>
+<div class="wrapper" style="display:flex;gap:24px;">
+  <div class="exit">출구</div>
+  <div class="board" id="board"></div>
+  <div id="logPanel" style="width:160px;border:2px solid #ccc;border-radius:8px;padding:8px;font-size:14px;">
+    <b>이동 기록</b>
+    <ol id="log" style="padding-left:18px;margin-top:8px;"></ol>
+  </div>
+</div>
+
+<script>
+const cell = 60;
+
+// 이미지 기준 좌표 (0~5)
+const blocks = [
+  {id:2,x:0,y:0,w:1,h:2,color:'#ff2aa1'},
+  {id:3,x:1,y:0,w:3,h:1,color:'#92d050'},
+  {id:4,x:4,y:0,w:1,h:2,color:'#ffc000'},
+  {id:5,x:1,y:1,w:1,h:2,color:'#bf9000'},
+  {id:6,x:0,y:2,w:1,h:3,color:'#c00000'},
+  {id:1,x:2,y:2,w:1,h:2,color:'#00b050'},
+  {id:7,x:3,y:2,w:2,h:1,color:'#ed7d31'},
+  {id:8,x:3,y:3,w:3,h:1,color:'#4472c4'},
+  {id:10,x:3,y:4,w:1,h:2,color:'#7030a0'},
+  {id:11,x:5,y:4,w:1,h:2,color:'#7f7f7f'},
+  {id:9,x:0,y:5,w:3,h:1,color:'#e6007e'}
+];
+
+const board = document.getElementById('board');
+let grid;
+let moveCount = 0;
+
+function rebuildGrid(){
+  grid = Array.from({length:6},()=>Array(6).fill(null));
+  blocks.forEach(b=>{
+    for(let i=0;i<b.w;i++){
+      for(let j=0;j<b.h;j++){
+        grid[b.y+j][b.x+i] = b.id;
+      }
+    }
+  });
+}
+
+function render(){
+  board.innerHTML='';
+  blocks.forEach(b=>{
+    const el=document.createElement('div');
+    el.className='block';
+    el.textContent=b.id;
+    el.style.background=b.color;
+    el.style.left=b.x*cell+'px';
+    el.style.top=b.y*cell+'px';
+    el.style.width=b.w*cell+'px';
+    el.style.height=b.h*cell+'px';
+    enableDrag(el,b);
+    board.appendChild(el);
+  });
+}
+
+function canMove(b,dx,dy){
+  for(let i=0;i<b.w;i++){
+    for(let j=0;j<b.h;j++){
+      const nx=b.x+i+dx;
+      const ny=b.y+j+dy;
+      if(nx<0||ny<0||nx>=6||ny>=6) return false;
+      if(grid[ny][nx] && grid[ny][nx]!==b.id) return false;
+    }
+  }
+  return true;
+}
+
+function logMove(b,dir){
+  moveCount++;
+  const log=document.getElementById('log');
+  const li=document.createElement('li');
+  li.textContent = `${moveCount}. ${b.id}번 블록 ${dir}`;
+  log.appendChild(li);
+}
+
+function enableDrag(el,b){
+  let sx,sy;
+  el.onmousedown=e=>{
+    sx=e.clientX; sy=e.clientY;
+    document.onmousemove=ev=>{
+      const dx=ev.clientX-sx;
+      const dy=ev.clientY-sy;
+
+      if(b.w>b.h){ // 가로 블록
+        if(Math.abs(dx)>cell/2){
+          const step=Math.sign(dx);
+          if(canMove(b,step,0)){
+            b.x+=step; sx=ev.clientX;
+            logMove(b, step>0?'→':'←');
+            rebuildGrid(); render();
+          }
+        }
+      }else{ // 세로 블록
+        if(Math.abs(dy)>cell/2){
+          const step=Math.sign(dy);
+          if(canMove(b,0,step)){
+            b.y+=step; sy=ev.clientY;
+            logMove(b, step>0?'↓':'↑');
+            rebuildGrid(); render();
+          }
+        }
+      }
+    };
+    document.onmouseup=()=>{document.onmousemove=null};
+  };
+}
+
+rebuildGrid();
+render();
+</script>
 </body>
 </html>
