@@ -1,99 +1,118 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Rush Hour Puzzle</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Rush Hour Puzzle</title>
+
 <style>
-  body{
-    font-family:Arial, sans-serif;
-    display:flex;
+body{
+  font-family:Arial, sans-serif;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  margin-top:40px;
+}
+
+.wrapper{
+  position:relative;
+  display:flex;
+  gap:24px;
+  max-width:100%;
+}
+
+.exit{
+  position:absolute;
+  top:-20px;
+  left:150px;
+  font-weight:bold;
+}
+
+.board{
+  position:relative;
+  width:360px;
+  height:360px;
+  border:3px solid #333;
+  background-size:60px 60px;
+  background-image:
+    linear-gradient(to right,#999 1px,transparent 1px),
+    linear-gradient(to bottom,#999 1px,transparent 1px);
+}
+
+.block{
+  position:absolute;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:bold;
+  color:#000;
+  border-radius:8px;
+  cursor:pointer;
+  user-select:none;
+  touch-action:none; /* 모바일 드래그 핵심 */
+}
+
+#logPanel{
+  width:160px;
+  border:2px solid #ccc;
+  border-radius:8px;
+  padding:8px;
+  font-size:14px;
+}
+
+/* 모바일 대응 */
+@media (max-width:768px){
+  .wrapper{
     flex-direction:column;
     align-items:center;
-    margin-top:40px;
-  }
-
-  .wrapper{
-    position:relative;
-    display:flex;
-    gap:24px;
-    max-width:100%;
-  }
-
-  .exit{
-    position:absolute;
-    top:-20px;
-    left:150px;
-    font-weight:bold;
   }
 
   .board{
-    position:relative;
-    width:360px;
-    height:360px;
-    border:3px solid #333;
-    background-size:60px 60px;
-    background-image:
-      linear-gradient(to right,#999 1px,transparent 1px),
-      linear-gradient(to bottom,#999 1px,transparent 1px);
+    width:90vw;
+    height:90vw;
+    max-width:360px;
+    max-height:360px;
+    background-size: calc(90vw / 6) calc(90vw / 6);
   }
 
-  .block{
-    position:absolute;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    font-weight:bold;
-    color:#000;
-    border-radius:6px;
-    cursor:pointer;
-    user-select:none;
+  .exit{
+    left:50%;
+    transform:translateX(-50%);
   }
 
-  /* ✅ 모바일 대응 */
-  @media (max-width: 768px){
-    .wrapper{
-      flex-direction:column;
-      align-items:center;
-    }
-
-    .board{
-      width:90vw;
-      height:90vw;
-      max-width:360px;
-      max-height:360px;
-      background-size: calc(90vw / 6) calc(90vw / 6);
-    }
-
-    .exit{
-      left:50%;
-      transform:translateX(-50%);
-    }
-
-    #logPanel{
-      width:90vw !important;
-      max-width:360px;
-    }
+  #logPanel{
+    width:90vw;
+    max-width:360px;
   }
+}
 </style>
 </head>
+
 <body>
-  <div style="width:100%;text-align:center;margin-bottom:24px;">
-    <h2 style="margin:0;">조광일의 러시아워 퍼즐</h2>
-  </div>
-<div class="wrapper" style="display:flex;gap:24px;">
+
+<div style="width:100%;text-align:center;margin-bottom:24px;">
+  <h2 style="margin:0;">조광일의 러시아워 퍼즐</h2>
+</div>
+
+<div class="wrapper">
   <div class="exit">출구</div>
   <div class="board" id="board"></div>
-  <div id="logPanel" style="width:160px;border:2px solid #ccc;border-radius:8px;padding:8px;font-size:14px;">
+
+  <div id="logPanel">
     <b>이동 기록</b>
     <ol id="log" style="padding-left:18px;margin-top:8px;"></ol>
   </div>
 </div>
 
 <script>
-const cell = 60;
+const board = document.getElementById('board');
 
-// 이미지 기준 좌표 (0~5)
+// 셀 크기 자동 계산
+function getCellSize(){
+  return board.clientWidth / 6;
+}
+
+// 블록 데이터
 const blocks = [
   {id:2,x:0,y:0,w:1,h:2,color:'#ff2aa1'},
   {id:3,x:1,y:0,w:3,h:1,color:'#92d050'},
@@ -108,10 +127,10 @@ const blocks = [
   {id:9,x:0,y:5,w:3,h:1,color:'#e6007e'}
 ];
 
-const board = document.getElementById('board');
 let grid;
 let moveCount = 0;
 
+// 충돌 체크용 그리드
 function rebuildGrid(){
   grid = Array.from({length:6},()=>Array(6).fill(null));
   blocks.forEach(b=>{
@@ -123,22 +142,29 @@ function rebuildGrid(){
   });
 }
 
+// 렌더링
 function render(){
+  const cell = getCellSize();
+  const pad = cell * 0.08; // 블록 여백
+
   board.innerHTML='';
   blocks.forEach(b=>{
     const el=document.createElement('div');
     el.className='block';
     el.textContent=b.id;
     el.style.background=b.color;
-    el.style.left=b.x*cell+'px';
-    el.style.top=b.y*cell+'px';
-    el.style.width=b.w*cell+'px';
-    el.style.height=b.h*cell+'px';
+
+    el.style.left = b.x * cell + pad + 'px';
+    el.style.top  = b.y * cell + pad + 'px';
+    el.style.width  = b.w * cell - pad*2 + 'px';
+    el.style.height = b.h * cell - pad*2 + 'px';
+
     enableDrag(el,b);
     board.appendChild(el);
   });
 }
 
+// 이동 가능 체크
 function canMove(b,dx,dy){
   for(let i=0;i<b.w;i++){
     for(let j=0;j<b.h;j++){
@@ -151,6 +177,7 @@ function canMove(b,dx,dy){
   return true;
 }
 
+// 이동 기록
 function logMove(b,dir){
   moveCount++;
   const log=document.getElementById('log');
@@ -159,40 +186,55 @@ function logMove(b,dir){
   log.appendChild(li);
 }
 
+// 드래그 / 터치 통합
 function enableDrag(el,b){
-  let sx,sy;
-  el.onmousedown=e=>{
-    sx=e.clientX; sy=e.clientY;
-    document.onmousemove=ev=>{
-      const dx=ev.clientX-sx;
-      const dy=ev.clientY-sy;
+  let sx, sy;
 
-      if(b.w>b.h){ // 가로 블록
-        if(Math.abs(dx)>cell/2){
-          const step=Math.sign(dx);
+  el.onpointerdown = e => {
+    e.preventDefault();
+    el.setPointerCapture(e.pointerId);
+    sx = e.clientX;
+    sy = e.clientY;
+
+    document.onpointermove = ev => {
+      const cell = getCellSize();
+      const dx = ev.clientX - sx;
+      const dy = ev.clientY - sy;
+
+      if(b.w > b.h){
+        if(Math.abs(dx) > cell * 0.5){
+          const step = Math.sign(dx);
           if(canMove(b,step,0)){
-            b.x+=step; sx=ev.clientX;
-            logMove(b, step>0?'→':'←');
+            b.x += step;
+            sx = ev.clientX;
+            logMove(b, step > 0 ? '→' : '←');
             rebuildGrid(); render();
           }
         }
-      }else{ // 세로 블록
-        if(Math.abs(dy)>cell/2){
-          const step=Math.sign(dy);
+      }else{
+        if(Math.abs(dy) > cell * 0.5){
+          const step = Math.sign(dy);
           if(canMove(b,0,step)){
-            b.y+=step; sy=ev.clientY;
-            logMove(b, step>0?'↓':'↑');
+            b.y += step;
+            sy = ev.clientY;
+            logMove(b, step > 0 ? '↓' : '↑');
             rebuildGrid(); render();
           }
         }
       }
     };
-    document.onmouseup=()=>{document.onmousemove=null};
+
+    document.onpointerup = () => {
+      document.onpointermove = null;
+      document.onpointerup = null;
+    };
   };
 }
 
 rebuildGrid();
 render();
+window.addEventListener('resize', render);
 </script>
+
 </body>
 </html>
