@@ -3,17 +3,18 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>말랑 젤리 테트리스 🧩</title>
+  <title>말랑 터치 테트리스 🧩</title>
   <style>
     @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
 
     :root {
-      --bg-color: #f7f0ff;
+      --bg-color: #fff4f8;
       --panel-bg: #ffffff;
-      --primary: #9d72ff;
-      --accent: #ff85a1;
-      --text: #4a4a68;
-      --border: #e6d8ff;
+      --primary: #ff85a1;
+      --secondary: #9d72ff;
+      --accent: #ffd166;
+      --text: #5c4d59;
+      --border: #ffe3ec;
     }
 
     * {
@@ -22,6 +23,8 @@
       padding: 0;
       font-family: 'Pretendard', sans-serif;
       user-select: none;
+      -webkit-user-select: none;
+      -webkit-tap-highlight-color: transparent;
     }
 
     body {
@@ -30,18 +33,18 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
+      justify-content: flex-start;
       min-height: 100vh;
       padding: 10px;
     }
 
     .container {
       width: 100%;
-      max-width: 800px;
+      max-width: 450px;
       background: var(--panel-bg);
       border-radius: 28px;
-      padding: 20px;
-      box-shadow: 0 10px 30px rgba(157, 114, 255, 0.15);
+      padding: 16px;
+      box-shadow: 0 10px 30px rgba(255, 133, 161, 0.2);
       border: 4px solid #ffffff;
       display: flex;
       flex-direction: column;
@@ -50,115 +53,148 @@
 
     h1 {
       color: var(--primary);
-      font-size: 1.5rem;
-      margin-bottom: 12px;
-      text-shadow: 2px 2px 0px #ffe5ec;
+      font-size: 1.3rem;
+      margin-bottom: 10px;
+      font-weight: 800;
     }
 
-    /* 모드 선택 버튼 */
+    /* 모드 선택 */
     .mode-select {
       display: flex;
-      gap: 10px;
-      margin-bottom: 16px;
+      gap: 8px;
+      margin-bottom: 12px;
+      width: 100%;
     }
 
     .mode-btn {
-      padding: 8px 16px;
+      flex: 1;
+      padding: 10px;
       border: 2px solid var(--border);
       border-radius: 16px;
-      background: #faf7ff;
+      background: #fff0f5;
       color: var(--text);
       font-weight: bold;
+      font-size: 0.85rem;
       cursor: pointer;
-      transition: all 0.2s;
     }
 
     .mode-btn.active {
       background: var(--primary);
       color: white;
       border-color: var(--primary);
-      box-shadow: 0 4px 10px rgba(157, 114, 255, 0.3);
+      box-shadow: 0 4px 10px rgba(255, 133, 161, 0.3);
     }
 
-    /* 게임 보드 레이아웃 */
+    /* 게임 에리어 */
     .game-area {
       display: flex;
-      gap: 20px;
-      justify-content: center;
-      flex-wrap: wrap;
+      flex-direction: column;
+      gap: 12px;
+      width: 100%;
+      align-items: center;
     }
 
     .player-container {
       display: flex;
-      gap: 12px;
-      background: #fcf9ff;
-      padding: 12px;
+      flex-direction: column;
+      align-items: center;
+      background: #fff8fa;
+      padding: 10px;
       border-radius: 20px;
       border: 2px dashed var(--border);
       position: relative;
+      width: 100%;
     }
 
-    .canvas-wrapper {
-      position: relative;
+    /* 1:1 대결 모드 시 2P 화면 반전 (서로 마주보고 놀 수 있게) */
+    .player-container.p2-mode {
+      transform: rotate(180deg);
+    }
+
+    .game-main-wrap {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
     }
 
     canvas.game-board {
       background: #ffffff;
       border-radius: 12px;
-      border: 3px solid #ede5ff;
-      box-shadow: inset 0 0 10px rgba(0,0,0,0.03);
+      border: 3px solid #ffd4e3;
+      box-shadow: inset 0 0 8px rgba(0,0,0,0.03);
     }
 
-    /* 사이드 정보 창 (점수 & Next 블록) */
     .sidebar {
       display: flex;
       flex-direction: column;
-      gap: 10px;
-      width: 90px;
+      gap: 8px;
+      width: 70px;
     }
 
     .info-box {
       background: white;
-      border: 2px solid #ede5ff;
-      border-radius: 14px;
-      padding: 8px;
+      border: 2px solid #ffd4e3;
+      border-radius: 12px;
+      padding: 6px;
       text-align: center;
     }
 
     .info-box h3 {
-      font-size: 0.75rem;
+      font-size: 0.65rem;
       color: var(--primary);
-      margin-bottom: 4px;
     }
 
     .info-box .score {
-      font-size: 1rem;
+      font-size: 0.85rem;
       font-weight: bold;
-      color: var(--accent);
+      color: var(--secondary);
     }
 
     canvas.next-board {
-      background: #fdfbfd;
-      border-radius: 8px;
-      margin-top: 4px;
+      background: #fff0f5;
+      border-radius: 6px;
+      margin-top: 2px;
     }
 
-    /* 조작법 안내 */
-    .controls-info {
-      margin-top: 12px;
-      font-size: 0.75rem;
-      color: #8c8ca1;
-      text-align: center;
-      background: #faf7ff;
-      padding: 8px 14px;
-      border-radius: 12px;
+    /* 🎮 모바일 터치 패드 조작부 */
+    .touch-pad {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
       width: 100%;
+      margin-top: 8px;
     }
 
-    /* 게임 시작 / 일시정지 버튼 */
+    .pad-btn {
+      background: #ffffff;
+      border: 2px solid #ffccd8;
+      border-radius: 14px;
+      padding: 12px 0;
+      font-size: 1.2rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--primary);
+      box-shadow: 0 4px 8px rgba(255, 133, 161, 0.15);
+      cursor: pointer;
+    }
+
+    .pad-btn:active {
+      background: #ffe3ec;
+      transform: scale(0.92);
+    }
+
+    .pad-btn.drop-btn {
+      background: #ff85a1;
+      color: white;
+      border-color: #ff85a1;
+    }
+
+    /* 게임 시작 버튼 */
     .start-btn {
-      margin-top: 12px;
-      padding: 12px 28px;
+      margin-top: 10px;
+      width: 100%;
+      padding: 14px;
       background: linear-gradient(135deg, #ff85a1, #ff6b8b);
       color: white;
       border: none;
@@ -167,30 +203,24 @@
       font-weight: bold;
       cursor: pointer;
       box-shadow: 0 4px 12px rgba(255, 133, 161, 0.3);
-      transition: transform 0.1s;
     }
 
-    .start-btn:active {
-      transform: scale(0.95);
-    }
-
-    /* 게임 오버 오버레이 */
+    /* 게임 오버 레이어 */
     .game-over-overlay {
       position: absolute;
       top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(74, 74, 104, 0.85);
-      backdrop-filter: blur(2px);
-      border-radius: 16px;
+      background: rgba(92, 77, 89, 0.85);
+      border-radius: 18px;
       display: flex;
-      flex-direction: column;
       align-items: center;
       justify-content: center;
       color: white;
       font-weight: bold;
-      font-size: 1.2rem;
+      font-size: 1.1rem;
       opacity: 0;
       pointer-events: none;
       transition: opacity 0.3s;
+      z-index: 10;
     }
 
     .game-over-overlay.active {
@@ -202,83 +232,88 @@
 <body>
 
   <div class="container">
-    <h1>🍬 말랑 젤리 테트리스 🧩</h1>
+    <h1>🍬 말랑 터치 테트리스 🧩</h1>
 
     <div class="mode-select">
       <button class="mode-btn active" id="singleModeBtn">나 혼자 모드 👤</button>
-      <button class="mode-btn" id="dualModeBtn">친구랑 1:1 모드 👥</button>
+      <button class="mode-btn" id="dualModeBtn">친구랑 1:1 대결 👥</button>
     </div>
 
     <div class="game-area" id="gameArea">
-      <div class="player-container" id="p1Container">
-        <div class="canvas-wrapper">
-          <canvas id="p1Board" class="game-board" width="200" height="400"></canvas>
-          <div class="game-over-overlay" id="p1GameOver">GAME OVER 😿</div>
-        </div>
-        <div class="sidebar">
-          <div class="info-box">
-            <h3>NEXT</h3>
-            <canvas id="p1Next" class="next-board" width="70" height="70"></canvas>
+      <!-- 2P 전용 플레이어 (1:1 모드 활성화 시 거꾸로 배치됨) -->
+      <div class="player-container p2-mode" id="p2Container" style="display: none;">
+        <div class="game-main-wrap">
+          <canvas id="p2Board" class="game-board" width="150" height="300"></canvas>
+          <div class="sidebar">
+            <div class="info-box">
+              <h3>NEXT</h3>
+              <canvas id="p2Next" class="next-board" width="50" height="50"></canvas>
+            </div>
+            <div class="info-box">
+              <h3>SCORE</h3>
+              <div class="score" id="p2Score">0</div>
+            </div>
           </div>
-          <div class="info-box">
-            <h3>SCORE</h3>
-            <div class="score" id="p1Score">0</div>
-          </div>
         </div>
+        <div class="touch-pad">
+          <div class="pad-btn" onclick="p2.moveLeft()">◀</div>
+          <div class="pad-btn" onclick="p2.rotatePiece()">🔄</div>
+          <div class="pad-btn" onclick="p2.drop()">▼</div>
+          <div class="pad-btn" onclick="p2.moveRight()">▶</div>
+          <div class="pad-btn drop-btn" style="grid-column: span 4;" onclick="p2.hardDrop()">⬇️ 즉시 낙하</div>
+        </div>
+        <div class="game-over-overlay" id="p2GameOver">GAME OVER 😿</div>
       </div>
 
-      <div class="player-container" id="p2Container" style="display: none;">
-        <div class="canvas-wrapper">
-          <canvas id="p2Board" class="game-board" width="200" height="400"></canvas>
-          <div class="game-over-overlay" id="p2GameOver">GAME OVER 😿</div>
-        </div>
-        <div class="sidebar">
-          <div class="info-box">
-            <h3>NEXT</h3>
-            <canvas id="p2Next" class="next-board" width="70" height="70"></canvas>
+      <!-- 1P 플레이어 -->
+      <div class="player-container" id="p1Container">
+        <div class="game-main-wrap">
+          <canvas id="p1Board" class="game-board" width="150" height="300"></canvas>
+          <div class="sidebar">
+            <div class="info-box">
+              <h3>NEXT</h3>
+              <canvas id="p1Next" class="next-board" width="50" height="50"></canvas>
+            </div>
+            <div class="info-box">
+              <h3>SCORE</h3>
+              <div class="score" id="p1Score">0</div>
+            </div>
           </div>
-          <div class="info-box">
-            <h3>SCORE</h3>
-            <div class="score" id="p2Score">0</div>
-          </div>
         </div>
+        <!-- 1P 터치 버트 패드 -->
+        <div class="touch-pad">
+          <div class="pad-btn" onclick="p1.moveLeft()">◀</div>
+          <div class="pad-btn" onclick="p1.rotatePiece()">🔄</div>
+          <div class="pad-btn" onclick="p1.drop()">▼</div>
+          <div class="pad-btn" onclick="p1.moveRight()">▶</div>
+          <div class="pad-btn drop-btn" style="grid-column: span 4;" onclick="p1.hardDrop()">⬇️ 즉시 낙하</div>
+        </div>
+        <div class="game-over-overlay" id="p1GameOver">GAME OVER 😿</div>
       </div>
     </div>
 
     <button class="start-btn" id="startBtn">게임 시작 ✨</button>
-
-    <div class="controls-info" id="controlsInfo">
-      <b>[1P 조작법]</b> ◀ ▶: 이동 | ▲: 회전 | ▼: 빠른 하강 | Space: 즉시 떨어뜨리기
-    </div>
   </div>
 
   <script>
     const COLS = 10;
     const ROWS = 20;
-    const BLOCK_SIZE = 20;
+    const BLOCK_SIZE = 15; // 모바일 화면에 맞춘 픽셀 크기
 
-    // 파스텔 젤리 테마 색상 (7가지 테트리스 블록)
     const COLORS = [
       null,
-      '#ff85a1', // I : 핑크
-      '#ffd166', // J : 노랑
-      '#06d6a0', // L : 민트
-      '#118ab2', // O : 파랑
-      '#a0c4ff', // S : 하늘
-      '#c77dff', // T : 보라
-      '#ff9e64'  // Z : 주황
+      '#ff85a1', '#ffd166', '#06d6a0', '#118ab2', '#a0c4ff', '#c77dff', '#ff9e64'
     ];
 
-    // 블록 모양 정의
     const SHAPES = [
       [],
-      [[0,0,0,0],[1,1,1,1],[0,0,0,0],[0,0,0,0]], // I
-      [[2,0,0],[2,2,2],[0,0,0]],                // J
-      [[0,0,3],[3,3,3],[0,0,0]],                // L
-      [[4,4],[4,4]],                            // O
-      [[0,5,5],[5,5,0],[0,0,0]],                // S
-      [[0,6,0],[6,6,6],[0,0,0]],                // T
-      [[7,7,0],[0,7,7],[0,0,0]]                 // Z
+      [[0,0,0,0],[1,1,1,1],[0,0,0,0],[0,0,0,0]],
+      [[2,0,0],[2,2,2],[0,0,0]],
+      [[0,0,3],[3,3,3],[0,0,0]],
+      [[4,4],[4,4]],
+      [[0,5,5],[5,5,0],[0,0,0]],
+      [[0,6,0],[6,6,6],[0,0,0]],
+      [[7,7,0],[0,7,7],[0,0,0]]
     ];
 
     class TetrisGame {
@@ -289,7 +324,6 @@
         this.nextCtx = nextCanvas.getContext('2d');
         this.scoreElement = scoreElement;
         this.gameOverOverlay = gameOverOverlay;
-
         this.reset();
       }
 
@@ -343,27 +377,32 @@
       }
 
       moveLeft() {
+        if (this.gameOver) return;
         if (!this.checkCollision(this.currentPiece.x - 1, this.currentPiece.y, this.currentPiece.shape)) {
           this.currentPiece.x--;
+          this.draw();
         }
       }
 
       moveRight() {
+        if (this.gameOver) return;
         if (!this.checkCollision(this.currentPiece.x + 1, this.currentPiece.y, this.currentPiece.shape)) {
           this.currentPiece.x++;
+          this.draw();
         }
       }
 
       rotatePiece() {
+        if (this.gameOver) return;
         const rotated = this.rotate(this.currentPiece.shape);
         if (!this.checkCollision(this.currentPiece.x, this.currentPiece.y, rotated)) {
           this.currentPiece.shape = rotated;
+          this.draw();
         }
       }
 
       drop() {
         if (this.gameOver) return;
-
         if (!this.checkCollision(this.currentPiece.x, this.currentPiece.y + 1, this.currentPiece.shape)) {
           this.currentPiece.y++;
         } else {
@@ -371,6 +410,7 @@
           this.clearLines();
           this.spawnPiece();
         }
+        this.draw();
       }
 
       hardDrop() {
@@ -385,10 +425,8 @@
         const shape = this.currentPiece.shape;
         for (let r = 0; r < shape.length; r++) {
           for (let c = 0; c < shape[r].length; c++) {
-            if (shape[r][c] !== 0) {
-              if (this.currentPiece.y + r >= 0) {
-                this.grid[this.currentPiece.y + r][this.currentPiece.x + c] = this.currentPiece.color;
-              }
+            if (shape[r][c] !== 0 && this.currentPiece.y + r >= 0) {
+              this.grid[this.currentPiece.y + r][this.currentPiece.x + c] = this.currentPiece.color;
             }
           }
         }
@@ -401,7 +439,7 @@
             this.grid.splice(r, 1);
             this.grid.unshift(Array(COLS).fill(0));
             linesCleared++;
-            r++; 
+            r++;
           }
         }
         if (linesCleared > 0) {
@@ -413,7 +451,6 @@
       draw() {
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
-        // 보드에 쌓인 블록 그리기
         for (let r = 0; r < ROWS; r++) {
           for (let c = 0; c < COLS; c++) {
             if (this.grid[r][c]) {
@@ -422,7 +459,6 @@
           }
         }
 
-        // 떨어지는 블록 그리기
         if (this.currentPiece && !this.gameOver) {
           const shape = this.currentPiece.shape;
           for (let r = 0; r < shape.length; r++) {
@@ -438,7 +474,7 @@
       drawNextPiece() {
         this.nextCtx.clearRect(0, 0, this.nextCanvas.width, this.nextCanvas.height);
         const shape = this.nextPiece.shape;
-        const size = 14;
+        const size = 10;
         const offsetX = (this.nextCanvas.width - shape[0].length * size) / 2;
         const offsetY = (this.nextCanvas.height - shape.length * size) / 2;
 
@@ -447,7 +483,7 @@
             if (shape[r][c] !== 0) {
               this.nextCtx.fillStyle = this.nextPiece.color;
               this.nextCtx.beginPath();
-              this.nextCtx.roundRect(offsetX + c * size, offsetY + r * size, size - 1, size - 1, 3);
+              this.nextCtx.roundRect(offsetX + c * size, offsetY + r * size, size - 1, size - 1, 2);
               this.nextCtx.fill();
             }
           }
@@ -457,13 +493,11 @@
       drawBlock(ctx, x, y, color) {
         ctx.fillStyle = color;
         ctx.beginPath();
-        // 귀여운 둥근 모서리 젤리 블록
-        ctx.roundRect(x * BLOCK_SIZE, y * BLOCK_SIZE, BLOCK_SIZE - 1, BLOCK_SIZE - 1, 5);
+        ctx.roundRect(x * BLOCK_SIZE, y * BLOCK_SIZE, BLOCK_SIZE - 1, BLOCK_SIZE - 1, 3);
         ctx.fill();
       }
     }
 
-    // 모드 관리 및 게임 루프
     let isDualMode = false;
     let isRunning = false;
     let gameLoopInterval = null;
@@ -486,14 +520,12 @@
     const singleModeBtn = document.getElementById('singleModeBtn');
     const dualModeBtn = document.getElementById('dualModeBtn');
     const p2Container = document.getElementById('p2Container');
-    const controlsInfo = document.getElementById('controlsInfo');
 
     singleModeBtn.addEventListener('click', () => {
       isDualMode = false;
       singleModeBtn.classList.add('active');
       dualModeBtn.classList.remove('active');
       p2Container.style.display = 'none';
-      controlsInfo.innerHTML = '<b>[1P 조작법]</b> ◀ ▶: 이동 | ▲: 회전 | ▼: 빠른 하강 | Space: 즉시 떨어뜨리기';
       stopGame();
     });
 
@@ -502,39 +534,10 @@
       dualModeBtn.classList.add('active');
       singleModeBtn.classList.remove('active');
       p2Container.style.display = 'flex';
-      controlsInfo.innerHTML = '<b>[1P]</b> A,D: 이동 | W: 회전 | S: 하강 | Space: 즉시 낙하<br><b>[2P]</b> ◀,▶: 이동 | ▲: 회전 | ▼: 하강 | Enter: 즉시 낙하';
       stopGame();
     });
 
-    // 키보드 이벤트 조작
-    window.addEventListener('keydown', (e) => {
-      if (!isRunning) return;
-
-      // 1P 조작 (단일 모드: 화살표, 2인 모드: WASD)
-      if (!isDualMode) {
-        if (e.key === 'ArrowLeft') p1.moveLeft();
-        if (e.key === 'ArrowRight') p1.moveRight();
-        if (e.key === 'ArrowUp') p1.rotatePiece();
-        if (e.key === 'ArrowDown') p1.drop();
-        if (e.key === ' ') p1.hardDrop();
-      } else {
-        // 1P : WASD
-        if (e.key === 'a' || e.key === 'A') p1.moveLeft();
-        if (e.key === 'd' || e.key === 'D') p1.moveRight();
-        if (e.key === 'w' || e.key === 'W') p1.rotatePiece();
-        if (e.key === 's' || e.key === 'S') p1.drop();
-        if (e.key === ' ') p1.hardDrop();
-
-        // 2P : 화살표
-        if (e.key === 'ArrowLeft') p2.moveLeft();
-        if (e.key === 'ArrowRight') p2.moveRight();
-        if (e.key === 'ArrowUp') p2.rotatePiece();
-        if (e.key === 'ArrowDown') p2.drop();
-        if (e.key === 'Enter') p2.hardDrop();
-      }
-    });
-
-    // 시작/재시작
+    // 시작
     const startBtn = document.getElementById('startBtn');
     startBtn.addEventListener('click', () => {
       p1.reset();
@@ -551,13 +554,9 @@
         p1.drop();
         if (isDualMode) p2.drop();
 
-        p1.draw();
-        if (isDualMode) p2.draw();
-
-        // 둘 다 게임오버 체크
         if (isDualMode && p1.gameOver && p2.gameOver) stopGame();
         else if (!isDualMode && p1.gameOver) stopGame();
-      }, 500);
+      }, 600);
     }
 
     function stopGame() {
@@ -565,7 +564,6 @@
       if (gameLoopInterval) clearInterval(gameLoopInterval);
     }
 
-    // 초기 화면 그리기
     p1.draw();
     p2.draw();
   </script>
