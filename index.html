@@ -1,240 +1,643 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Rush Hour Puzzle</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>말랑 푸딩 명함첩 🍮</title>
+  <style>
+    @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
 
-<style>
-body{
-  font-family:Arial, sans-serif;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  margin-top:40px;
-}
+    :root {
+      --bg-color: #fff4f8;
+      --card-bg: #ffffff;
+      --primary: #ff85a1;
+      --primary-hover: #ff6b8b;
+      --accent: #ffd166;
+      --secondary: #a0c4ff;
+      --text: #5c4d59;
+      --text-light: #9d8c99;
+      --radius: 24px;
+    }
 
-.wrapper{
-  position:relative;
-  display:flex;
-  gap:24px;
-  max-width:100%;
-}
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
 
-.exit{
-  position:absolute;
-  top:-20px;
-  left:150px;
-  font-weight:bold;
-}
+    body {
+      background-color: var(--bg-color);
+      color: var(--text);
+      display: flex;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 12px;
+    }
 
-.board{
-  position:relative;
-  width:360px;
-  height:360px;
-  border:3px solid #333;
-  background-size:60px 60px;
-  background-image:
-    linear-gradient(to right,#999 1px,transparent 1px),
-    linear-gradient(to bottom,#999 1px,transparent 1px);
-}
+    .app-container {
+      width: 100%;
+      max-width: 420px;
+      background: #ffffff;
+      border-radius: 36px;
+      box-shadow: 0 12px 32px rgba(255, 133, 161, 0.15);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      position: relative;
+      border: 4px solid #ffe3ec;
+    }
 
-.block{
-  position:absolute;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-weight:bold;
-  color:#000;
-  border-radius:8px;
-  cursor:pointer;
-  user-select:none;
-  touch-action:none; /* 모바일 드래그 핵심 */
-}
+    /* 헤더 (명함첩 이름 수정 기능) */
+    header {
+      padding: 20px 16px;
+      text-align: center;
+      background: #fff0f5;
+      border-bottom: 3px dashed #ffd4e3;
+    }
 
-#logPanel{
-  width:160px;
-  border:2px solid #ccc;
-  border-radius:8px;
-  padding:8px;
-  font-size:14px;
-}
+    .title-wrapper {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      padding: 6px 14px;
+      background: #ffffff;
+      border-radius: 20px;
+      border: 2px solid #ffccd8;
+      box-shadow: 0 2px 8px rgba(255, 133, 161, 0.1);
+      transition: transform 0.2s;
+    }
 
-/* 모바일 대응 */
-@media (max-width:768px){
-  .wrapper{
-    flex-direction:column;
-    align-items:center;
-  }
+    .title-wrapper:active {
+      transform: scale(0.95);
+    }
 
-  .board{
-    width:90vw;
-    height:90vw;
-    max-width:360px;
-    max-height:360px;
-    background-size: calc(90vw / 6) calc(90vw / 6);
-  }
+    header h1 {
+      font-size: 1.2rem;
+      color: var(--primary);
+      font-weight: 800;
+    }
 
-  .exit{
-    left:50%;
-    transform:translateX(-50%);
-  }
+    header span.edit-icon {
+      font-size: 0.9rem;
+      opacity: 0.7;
+    }
 
-  #logPanel{
-    width:90vw;
-    max-width:360px;
-  }
-}
-</style>
+    /* 메인 리스트 영역 */
+    main {
+      flex: 1;
+      padding: 16px;
+      overflow-y: auto;
+    }
+
+    .card-list {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+
+    .card-item {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      padding: 16px;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.04);
+      border: 2.5px solid #fff0f5;
+      transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      animation: jelly 0.4s ease;
+      position: relative;
+    }
+
+    .card-item:hover {
+      transform: translateY(-3px) scale(1.01);
+    }
+
+    /* 명함 이미지 또는 대체 프로필 */
+    .card-img-container {
+      width: 100%;
+      height: 180px;
+      border-radius: 16px;
+      overflow: hidden;
+      margin-bottom: 12px;
+      background: #fdf0f4;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .card-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .card-placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      color: var(--primary);
+      font-weight: bold;
+    }
+
+    .card-placeholder .avatar {
+      font-size: 48px;
+    }
+
+    .card-info h3 {
+      font-size: 1.15rem;
+      color: var(--text);
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .card-info p {
+      font-size: 0.88rem;
+      color: var(--text-light);
+      margin-bottom: 3px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* 삭제 아이콘 버튼 */
+    .delete-btn {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      background: #fff0f3;
+      border: none;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+      transition: transform 0.2s, background 0.2s;
+    }
+
+    .delete-btn:active {
+      transform: scale(0.85);
+      background: #ffe0e6;
+    }
+
+    /* 비어있을 때 안내 */
+    .empty-state {
+      text-align: center;
+      padding: 50px 20px;
+      color: var(--text-light);
+    }
+
+    .empty-state .emoji {
+      font-size: 50px;
+      margin-bottom: 12px;
+      animation: float 2s infinite ease-in-out;
+    }
+
+    /* 플로팅 + 버튼 */
+    .add-btn {
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+      width: 60px;
+      height: 60px;
+      background: linear-gradient(135deg, #ff85a1, #ff6b8b);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      font-size: 30px;
+      box-shadow: 0 8px 20px rgba(255, 107, 139, 0.4);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .add-btn:active {
+      transform: scale(0.88) rotate(90deg);
+    }
+
+    /* 모달 공통 스타일 */
+    .modal {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(92, 77, 89, 0.4);
+      backdrop-filter: blur(5px);
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+      z-index: 100;
+    }
+
+    .modal.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal-content {
+      background: white;
+      width: 100%;
+      border-radius: 32px 32px 0 0;
+      padding: 24px;
+      transform: translateY(100%);
+      transition: transform 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      border-top: 4px solid #ffe3ec;
+    }
+
+    .modal.active .modal-content {
+      transform: translateY(0);
+    }
+
+    /* 삭제 전용 확인 중앙 모달 */
+    .modal-center {
+      align-items: center;
+      padding: 20px;
+    }
+
+    .modal-center .modal-content {
+      border-radius: 28px;
+      text-align: center;
+      transform: scale(0.8);
+      border: 3px solid #ffe3ec;
+    }
+
+    .modal-center.active .modal-content {
+      transform: scale(1);
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .modal-header h2 {
+      font-size: 1.2rem;
+      color: var(--primary);
+      font-weight: 800;
+    }
+
+    .close-btn {
+      background: #f7f5f7;
+      border: none;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      font-size: 16px;
+      color: var(--text-light);
+      cursor: pointer;
+    }
+
+    /* 사진 등록 박스 */
+    .photo-picker {
+      width: 100%;
+      height: 150px;
+      border: 2.5px dashed #ffcad4;
+      border-radius: 20px;
+      background: #fffcfd;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      margin-bottom: 16px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .photo-picker img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .photo-picker p {
+      font-size: 0.85rem;
+      color: var(--primary);
+      margin-top: 6px;
+      font-weight: 600;
+    }
+
+    input[type="file"] {
+      display: none;
+    }
+
+    /* 폼 입력창 */
+    .input-group {
+      margin-bottom: 12px;
+    }
+
+    .input-group input {
+      width: 100%;
+      padding: 14px 18px;
+      border: 2px solid #ffe8f0;
+      border-radius: 16px;
+      outline: none;
+      font-size: 0.92rem;
+      background: #fffcfd;
+      transition: border-color 0.2s;
+    }
+
+    .input-group input:focus {
+      border-color: var(--primary);
+      background: #ffffff;
+    }
+
+    /* 버튼 모음 */
+    .btn-container {
+      display: flex;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .submit-btn {
+      width: 100%;
+      padding: 15px;
+      background: linear-gradient(135deg, #ff85a1, #ff6b8b);
+      color: white;
+      border: none;
+      border-radius: 18px;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(255, 133, 161, 0.3);
+      transition: transform 0.1s;
+    }
+
+    .submit-btn:active {
+      transform: scale(0.98);
+    }
+
+    .cancel-btn {
+      width: 100%;
+      padding: 15px;
+      background: #f0ebed;
+      color: var(--text-light);
+      border: none;
+      border-radius: 18px;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    /* Keyframes 키프레임 애니메이션 */
+    @keyframes jelly {
+      0% { transform: scale(0.9); }
+      50% { transform: scale(1.03); }
+      100% { transform: scale(1); }
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+  </style>
 </head>
-
 <body>
 
-<div style="width:100%;text-align:center;margin-bottom:24px;">
-  <h2 style="margin:0;">조광일의 러시아워 퍼즐</h2>
-</div>
+  <div class="app-container">
+    <!-- 헤더 영역 (클릭시 명함첩 이름 변경 가능) -->
+    <header>
+      <div class="title-wrapper" id="editTitleBtn">
+        <h1 id="appTitle">말랑 푸딩 명함첩 🍮</h1>
+        <span class="edit-icon">✏️</span>
+      </div>
+    </header>
 
-<div class="wrapper">
-  <div class="exit">출구</div>
-  <div class="board" id="board"></div>
+    <main>
+      <div id="cardList" class="card-list"></div>
+      <div id="emptyState" class="empty-state">
+        <div class="emoji">🎀</div>
+        <strong style="color: var(--text);">아직 저장된 명함이 없어요!</strong>
+        <p style="margin-top: 6px; font-size: 0.85rem;">오른쪽 아래 + 버튼을 눌러 첫 명함을 등록해 보세요.</p>
+      </div>
+    </main>
 
-  <div id="logPanel">
-    <b>이동 기록</b>
-    <ol id="log" style="padding-left:18px;margin-top:8px;"></ol>
+    <!-- 명함 추가 플로팅 버튼 -->
+    <button class="add-btn" id="openModalBtn">＋</button>
+
+    <!-- [모달 1] 명함 등록 모달 -->
+    <div class="modal" id="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>새 명함 등록 🎀</h2>
+          <button class="close-btn" id="closeModalBtn">✕</button>
+        </div>
+
+        <!-- 카메라/사진 선택 (선택 사항) -->
+        <div class="photo-picker" id="photoPicker">
+          <span style="font-size: 32px;">📷</span>
+          <p>명함 촬영 / Photo (선택사항)</p>
+          <img id="previewImage" style="display: none;" alt="명함 미리보기">
+        </div>
+        <input type="file" id="cameraInput" accept="image/*" capture="environment">
+
+        <div class="input-group">
+          <input type="text" id="inputName" placeholder="이름 (필수, 예: 홍길동)">
+        </div>
+        <div class="input-group">
+          <input type="text" id="inputCompany" placeholder="회사 / 직함 (선택, 예: 젤리 컴퍼니)">
+        </div>
+        <div class="input-group">
+          <input type="tel" id="inputPhone" placeholder="전화번호 (선택, 예: 010-1234-5678)">
+        </div>
+
+        <button class="submit-btn" id="saveBtn">명함 저장하기 ✨</button>
+      </div>
+    </div>
+
+    <!-- [모달 2] 삭제 확인 모달 (실수 방지용) -->
+    <div class="modal modal-center" id="deleteModal">
+      <div class="modal-content">
+        <div style="font-size: 40px; margin-bottom: 8px;">😿</div>
+        <h2 style="font-size: 1.1rem; color: var(--text); margin-bottom: 8px;">정말 이 명함을 삭제할까요?</h2>
+        <p style="font-size: 0.85rem; color: var(--text-light); margin-bottom: 20px;">삭제하면 다시 복구할 수 없어요.</p>
+        <div class="btn-container">
+          <button class="cancel-btn" id="cancelDeleteBtn">취소</button>
+          <button class="submit-btn" id="confirmDeleteBtn" style="background: #ff6b8b;">삭제하기</button>
+        </div>
+      </div>
+    </div>
+
   </div>
-</div>
 
-<script>
-const board = document.getElementById('board');
+  <script>
+    // DOM 요소
+    const appTitle = document.getElementById('appTitle');
+    const editTitleBtn = document.getElementById('editTitleBtn');
+    const modal = document.getElementById('modal');
+    const deleteModal = document.getElementById('deleteModal');
+    const openModalBtn = document.getElementById('openModalBtn');
+    const closeModalBtn = document.getElementById('closeModalBtn');
+    const photoPicker = document.getElementById('photoPicker');
+    const cameraInput = document.getElementById('cameraInput');
+    const previewImage = document.getElementById('previewImage');
+    const saveBtn = document.getElementById('saveBtn');
+    const cardList = document.getElementById('cardList');
+    const emptyState = document.getElementById('emptyState');
+    const cancelDeleteBtn = document.getElementById('cancelDeleteBtn');
+    const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
 
-// 셀 크기 자동 계산
-function getCellSize(){
-  return board.clientWidth / 6;
-}
+    let currentImageData = null;
+    let cardToDeleteId = null;
 
-// 블록 데이터
-const blocks = [
-  {id:2,x:0,y:0,w:1,h:2,color:'#ff2aa1'},
-  {id:3,x:1,y:0,w:3,h:1,color:'#92d050'},
-  {id:4,x:4,y:0,w:1,h:2,color:'#ffc000'},
-  {id:5,x:1,y:1,w:1,h:2,color:'#bf9000'},
-  {id:6,x:0,y:2,w:1,h:3,color:'#c00000'},
-  {id:1,x:2,y:2,w:1,h:2,color:'#00b050'},
-  {id:7,x:3,y:2,w:2,h:1,color:'#ed7d31'},
-  {id:8,x:3,y:3,w:3,h:1,color:'#4472c4'},
-  {id:10,x:3,y:4,w:1,h:2,color:'#7030a0'},
-  {id:11,x:5,y:4,w:1,h:2,color:'#7f7f7f'},
-  {id:9,x:0,y:5,w:3,h:1,color:'#e6007e'}
-];
+    // 데이터 초기화
+    let cards = JSON.parse(localStorage.getItem('my_cards') || '[]');
+    let savedTitle = localStorage.getItem('my_card_title') || '말랑 푸딩 명함첩 🍮';
 
-let grid;
-let moveCount = 0;
+    appTitle.textContent = savedTitle;
+    renderCards();
 
-// 충돌 체크용 그리드
-function rebuildGrid(){
-  grid = Array.from({length:6},()=>Array(6).fill(null));
-  blocks.forEach(b=>{
-    for(let i=0;i<b.w;i++){
-      for(let j=0;j<b.h;j++){
-        grid[b.y+j][b.x+i] = b.id;
+    // 1. 명함첩 이름 변경 기능
+    editTitleBtn.addEventListener('click', () => {
+      const newTitle = prompt('새로운 명함첩 이름을 입력해 주세요!', appTitle.textContent);
+      if (newTitle && newTitle.trim() !== '') {
+        appTitle.textContent = newTitle.trim();
+        localStorage.setItem('my_card_title', newTitle.trim());
+      }
+    });
+
+    // 2. 모달 열기 및 닫기
+    openModalBtn.addEventListener('click', () => modal.classList.add('active'));
+    closeModalBtn.addEventListener('click', closeModal);
+
+    function closeModal() {
+      modal.classList.remove('active');
+      resetForm();
+    }
+
+    // 3. 사진 연동 (카메라 / 파일)
+    photoPicker.addEventListener('click', () => cameraInput.click());
+
+    cameraInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          currentImageData = event.target.result;
+          previewImage.src = currentImageData;
+          previewImage.style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    // 4. 명함 저장하기 (사진이 없어도 저장 가능)
+    saveBtn.addEventListener('click', () => {
+      const name = document.getElementById('inputName').value.trim();
+      const company = document.getElementById('inputCompany').value.trim();
+      const phone = document.getElementById('inputPhone').value.trim();
+
+      if (!name) {
+        alert('이름은 꼭 입력해 주세요! 🌸');
+        return;
+      }
+
+      const newCard = {
+        id: Date.now(),
+        image: currentImageData, // null 이어도 저장됨
+        name: name,
+        company: company || '소속 없음',
+        phone: phone || ''
+      };
+
+      cards.unshift(newCard);
+      saveToStorage();
+      renderCards();
+      closeModal();
+    });
+
+    // 5. 삭제 확인 과정 (신중한 2단계 삭제)
+    function promptDeleteCard(id) {
+      cardToDeleteId = id;
+      deleteModal.classList.add('active');
+    }
+
+    cancelDeleteBtn.addEventListener('click', () => {
+      deleteModal.classList.remove('active');
+      cardToDeleteId = null;
+    });
+
+    confirmDeleteBtn.addEventListener('click', () => {
+      if (cardToDeleteId !== null) {
+        cards = cards.filter(card => card.id !== cardToDeleteId);
+        saveToStorage();
+        renderCards();
+        deleteModal.classList.remove('active');
+        cardToDeleteId = null;
+      }
+    });
+
+    // 로컬스토리지 저장
+    function saveToStorage() {
+      localStorage.setItem('my_cards', JSON.stringify(cards));
+    }
+
+    // 6. 명함 목록 렌더링
+    function renderCards() {
+      cardList.innerHTML = '';
+
+      if (cards.length === 0) {
+        emptyState.style.display = 'block';
+      } else {
+        emptyState.style.display = 'none';
+
+        cards.forEach(card => {
+          const cardEl = document.createElement('div');
+          cardEl.className = 'card-item';
+
+          // 사진이 있을 때와 없을 때의 이미지 영역 생성
+          let imageAreaHtml = '';
+          if (card.image) {
+            imageAreaHtml = `
+              <div class="card-img-container">
+                <img src="${card.image}" class="card-img" alt="${card.name} 명함">
+              </div>`;
+          } else {
+            imageAreaHtml = `
+              <div class="card-img-container">
+                <div class="card-placeholder">
+                  <span class="avatar">🧸</span>
+                  <span>${card.name} 님의 명함</span>
+                </div>
+              </div>`;
+          }
+
+          cardEl.innerHTML = `
+            <button class="delete-btn" onclick="promptDeleteCard(${card.id})" title="삭제">🗑️</button>
+            ${imageAreaHtml}
+            <div class="card-info">
+              <h3><span>👤</span> ${card.name}</h3>
+              <p><span>🏢</span> ${card.company}</p>
+              ${card.phone ? `<p><span>📞</span> ${card.phone}</p>` : ''}
+            </div>
+          `;
+          cardList.appendChild(cardEl);
+        });
       }
     }
-  });
-}
 
-// 렌더링
-function render(){
-  const cell = getCellSize();
-  const pad = cell * 0.08; // 블록 여백
-
-  board.innerHTML='';
-  blocks.forEach(b=>{
-    const el=document.createElement('div');
-    el.className='block';
-    el.textContent=b.id;
-    el.style.background=b.color;
-
-    el.style.left = b.x * cell + pad + 'px';
-    el.style.top  = b.y * cell + pad + 'px';
-    el.style.width  = b.w * cell - pad*2 + 'px';
-    el.style.height = b.h * cell - pad*2 + 'px';
-
-    enableDrag(el,b);
-    board.appendChild(el);
-  });
-}
-
-// 이동 가능 체크
-function canMove(b,dx,dy){
-  for(let i=0;i<b.w;i++){
-    for(let j=0;j<b.h;j++){
-      const nx=b.x+i+dx;
-      const ny=b.y+j+dy;
-      if(nx<0||ny<0||nx>=6||ny>=6) return false;
-      if(grid[ny][nx] && grid[ny][nx]!==b.id) return false;
+    // 폼 초기화
+    function resetForm() {
+      document.getElementById('inputName').value = '';
+      document.getElementById('inputCompany').value = '';
+      document.getElementById('inputPhone').value = '';
+      previewImage.style.display = 'none';
+      previewImage.src = '';
+      currentImageData = null;
+      cameraInput.value = '';
     }
-  }
-  return true;
-}
-
-// 이동 기록
-function logMove(b,dir){
-  moveCount++;
-  const log=document.getElementById('log');
-  const li=document.createElement('li');
-  li.textContent = `${moveCount}. ${b.id}번 블록 ${dir}`;
-  log.appendChild(li);
-}
-
-// 드래그 / 터치 통합
-function enableDrag(el,b){
-  let sx, sy;
-
-  el.onpointerdown = e => {
-    e.preventDefault();
-    el.setPointerCapture(e.pointerId);
-    sx = e.clientX;
-    sy = e.clientY;
-
-    document.onpointermove = ev => {
-      const cell = getCellSize();
-      const dx = ev.clientX - sx;
-      const dy = ev.clientY - sy;
-
-      if(b.w > b.h){
-        if(Math.abs(dx) > cell * 0.5){
-          const step = Math.sign(dx);
-          if(canMove(b,step,0)){
-            b.x += step;
-            sx = ev.clientX;
-            logMove(b, step > 0 ? '→' : '←');
-            rebuildGrid(); render();
-          }
-        }
-      }else{
-        if(Math.abs(dy) > cell * 0.5){
-          const step = Math.sign(dy);
-          if(canMove(b,0,step)){
-            b.y += step;
-            sy = ev.clientY;
-            logMove(b, step > 0 ? '↓' : '↑');
-            rebuildGrid(); render();
-          }
-        }
-      }
-    };
-
-    document.onpointerup = () => {
-      document.onpointermove = null;
-      document.onpointerup = null;
-    };
-  };
-}
-
-rebuildGrid();
-render();
-window.addEventListener('resize', render);
-</script>
-
+  </script>
 </body>
 </html>
